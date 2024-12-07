@@ -59,7 +59,7 @@
 h1 {
     font-size: 3rem;
     margin-bottom: 10px;
-    color: #f39c12;
+    color: navy;
 }
 
 p {
