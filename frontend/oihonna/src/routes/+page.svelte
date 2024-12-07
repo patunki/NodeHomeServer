@@ -12,7 +12,6 @@
             <h1>Oihonna II</h1>
             <p>Hiton hyvä kotisivu</p>
     
-            <!-- Gallery Section -->
             <div class="gallery">
                 <a href="/chat" class="gallery-item">
                     <img src="../src/public/sot1.png" alt="Chat" />
@@ -45,6 +44,9 @@
 </MainLayout>
 
 <style>
+
+
+/* Main content styles */
 .main-content {
     flex: 1;
     display: flex;

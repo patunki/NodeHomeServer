@@ -4,6 +4,9 @@
 
     let dropdownOptions = ["Home", "About", "Gallery", "Contact"];
     let isDropdownOpen = writable(false);
+    
+    // User's logged-in state (for demo, we'll assume loggedIn is true or false)
+    let loggedIn = writable(false);
 
     const toggleDropdown = () => {
         isDropdownOpen.update(current => !current);
@@ -11,6 +14,11 @@
 
     const selectOption = (option) => {
         isDropdownOpen.set(false); // Close dropdown after selection
+    };
+
+    // Toggle login state (for testing purposes)
+    const toggleLogin = () => {
+        loggedIn.update(current => !current);
     };
 </script>
 
@@ -32,9 +40,16 @@
             </div>
         {/if}
 
+        <!-- Conditional Rendering of Login/Signup or Profile Links -->
         <div class="header-buttons">
-            <button class="buttons">Login</button>
-            <button class="buttons">Sign up</button>
+            {#if $loggedIn}
+                <!-- If the user is logged in, show the Profile link -->
+                <a href="/profile" class="buttons">Your Profile</a>
+            {:else}
+                <!-- If the user is not logged in, show Login and Sign Up buttons -->
+                <button class="buttons">Login</button>
+                <button class="buttons">Sign up</button>
+            {/if}
         </div>
     </header>
 
@@ -50,105 +65,103 @@
 </div>
 
 <style>
-    :global(body) {
-        background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('../src/public/oihonna1.png');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        color: black;
-        transition: background-color 0.3s;
-        margin: 0;
-        padding: 0;
-    }
+:global(body) {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('../src/public/oihonna1.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    color: black;
+    transition: background-color 0.3s;
+    margin: 0;
+    padding: 0;
+}
 
-    .app-container {
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh; /* Ensure the layout takes up the entire height of the screen */
-    }
+.app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
 
-    /* Main content should grow to fill the remaining space */
-    main {
-        flex: 1; /* This will make the main content take up the remaining space */
-    }
+main {
+    flex: 1;
+}
 
-    /* Header styles */
-    header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: #1e1e1e;
-        padding: 10px 20px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-    }
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #1e1e1e;
+    padding: 10px 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
 
-    .hamburger-menu {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        height: 32px;
-        width: 32px;
-        cursor: pointer;
-    }
+.hamburger-menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 32px;
+    width: 32px;
+    cursor: pointer;
+}
 
-    .dropdown-options {
-        position: absolute;
-        top: 50px;
-        left: 20px;
-        background: #292929;
-        padding: 10px;
-        border-radius: 5px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-    }
+.header-buttons {
+    display: flex;
+    gap: 10px;
+}
 
-    .dropdown-options button {
-        background: none;
-        color: #f5f5f5;
-        border: none;
-        padding: 10px 15px;
-        text-align: left;
-        cursor: pointer;
-        font-size: 16px;
-        transition: background 0.3s ease;
-        border-radius: 5px;
-    }
+.buttons {
+    background-color: #f39c12;
+    border: none;
+    color: #121212;
+    font-size: 16px;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
 
-    .dropdown-options button:hover {
-        background: #444;
-    }
+.buttons:hover {
+    background-color: #e67e22;
+}
 
-    .header-buttons {
-        display: flex;
-        gap: 10px;
-    }
+footer {
+    text-align: center;
+    padding: 10px;
+    background: #1e1e1e;
+    font-size: 0.9rem;
+    color: #bdc3c7;
+    margin-top: auto;
+}
 
-    .buttons {
-        background-color: #f39c12;
-        border: none;
-        color: #121212;
-        font-size: 16px;
-        padding: 10px 20px;
-        border-radius: 5px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: background 0.3s ease;
-    }
+.dropdown-options {
+    position: absolute;
+    top: 50px;
+    left: 20px;
+    background: #292929;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
 
-    .buttons:hover {
-        background-color: #e67e22;
-    }
+.dropdown-options button {
+    background: none;
+    color: #f5f5f5;
+    border: none;
+    padding: 10px 15px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s ease;
+    border-radius: 5px;
+}
 
-    /* Footer */
-    footer {
-        text-align: center;
-        padding: 10px;
-        background: #1e1e1e;
-        font-size: 0.9rem;
-        color: #bdc3c7;
-        margin-top: auto; /* Pushes footer to the bottom */
-    }
+.dropdown-options button:hover {
+    background: #444;
+}
+
 </style>
