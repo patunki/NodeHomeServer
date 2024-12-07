@@ -111,9 +111,9 @@ header {
 }
 
 .buttons {
-    background-color: #f39c12;
+    background-color: navy;
     border: none;
-    color: #121212;
+    color: white;
     font-size: 16px;
     padding: 10px 20px;
     border-radius: 5px;

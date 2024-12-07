@@ -58,12 +58,14 @@
               {/each}
             </div>
         
-            <input
-              type="text"
-              bind:value={message}
-              placeholder="Type your message here..."
-            />
-            <button on:click={sendMessage}>Send</button>
+            <div class="input-container">
+                <input
+                  type="text"
+                  bind:value={message}
+                  placeholder="Type your message here..."
+                />
+                <button on:click={sendMessage}>Send</button>
+              </div>
           </div>
     </slot>
   </MainLayout>
@@ -72,49 +74,69 @@
     .chat-container {
       display: flex;
       flex-direction: column;
-      height: 400px;
-      width: 100%;
-      max-width: 600px;
-      margin: auto;
-      border: 1px solid #ccc;
-      padding: 10px;
-      background-color: #f9f9f9;
+      height: 500px; /* Increased the height */
+      width: 80%;  /* Wider chat box */
+      max-width: 800px; /* Increased max-width */
+      margin: 100px auto 0;  /* Move the chat box lower down */
+      border: 1px solid #333;  /* Darker border */
+      padding: 20px;
+      background-color: #2a2a2a; /* Dark background for the whole chat box */
+      border-radius: 10px;
     }
   
     .messages {
       flex-grow: 1;
       overflow-y: auto;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
+      padding: 10px;
+      background-color: #333; /* Darker background for message area */
+      border-radius: 5px;
     }
   
     .message {
-      padding: 5px;
-      margin-bottom: 10px;
+      padding: 8px;
+      margin-bottom: 12px;
       border-radius: 5px;
-      background-color: #e0e0e0;
+      background-color: #444; /* Darker message bubble */
+      color: #f5f5f5; /* Lighter text color for contrast */
     }
   
     .message span {
       font-weight: bold;
     }
   
+    .input-container {
+      display: flex;
+      gap: 10px;
+    }
+  
     input[type="text"] {
-      width: 80%;
-      padding: 10px;
+      width: 75%;
+      padding: 12px;
       font-size: 14px;
+      background-color: #444; /* Dark background for input */
+      color: #f5f5f5;
+      border: 1px solid #555;
+      border-radius: 5px;
+    }
+  
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #888;
     }
   
     button {
-      padding: 10px;
+      padding: 12px;
       font-size: 14px;
-      background-color: #4CAF50;
+      background-color: navy;
       color: white;
       border: none;
       cursor: pointer;
+      border-radius: 5px;
     }
   
     button:hover {
-      background-color: #45a049;
+      background-color: blue;
     }
   </style>
   
