@@ -2,7 +2,7 @@
     import { writable } from 'svelte/store';
     import 'iconify-icon';
 
-    let dropdownOptions = ["Home", "About", "Gallery", "Contact"];
+    let dropdownOptions = ["Home", "Chat", "Gallery", "Contact"];
     let isDropdownOpen = writable(false);
     
     // User's logged-in state (for demo, we'll assume loggedIn is true or false)
