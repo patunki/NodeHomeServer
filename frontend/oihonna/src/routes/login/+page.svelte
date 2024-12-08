@@ -21,7 +21,8 @@
       if (res.ok) {
         const data = await res.json();
         console.log('Login successful', data);
-        localStorage.setItem('token', data.token);
+        localStorage.setItem('accessToken', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
         localStorage.setItem('user', JSON.stringify(data.user));
         setLoggedIn(true);
         // Redirect to a protected page (e.g., dashboard or home)

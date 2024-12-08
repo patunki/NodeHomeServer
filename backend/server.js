@@ -18,13 +18,9 @@ app.use(cors());
 
 const galleryPath = path.join(__dirname, 'uploads');
 
-const SECRET_KEY=process.env.SECRET_KEY;
+const ACCESS_SECRET_KEY=process.env.ACCESS_SECRET_KEY;
+const REFRESH_SECRET_KEY=process.env.REFRESH_SECRET_KEY;
 
-// Simulated user database
-const users = [
-    { username: "captain", password: "ahoy" },
-    { username: "sailor", password: "1234" },
-];
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -177,19 +173,32 @@ app.post('/auth/login', async (req, res) => {
       }
 
       // Generate JWT
-      const token = jwt.sign(
+      const accessToken = jwt.sign(
           {
               id: user.id,
               username: user.username,
               email: user.email,
           },
-          SECRET_KEY,
-          { expiresIn: '1h' } // Token expires in 1 hour
+          ACCESS_SECRET_KEY,
+          { expiresIn: '15m' } // Token expires in 15 min
       );
-      console.log("login: ", token);
+
+      const refreshToken = jwt.sign(
+        {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+        },
+        REFRESH_SECRET_KEY,
+        { expiresIn: '7d' } // Token expires in 7 days
+    );
+
+      await db.query(`UPDATE users SET refresh_token = ? WHERE id = ?`, [refreshToken, user.id]);
+
       res.status(200).json({
           message: 'Login successful',
-          token,
+          accessToken,
+          refreshToken,
           user: {
               id: user.id,
               username: user.username,
@@ -241,7 +250,7 @@ const verifyToken = (req, res, next) => {
   }
 
   const token = authHeader.split(' ')[1]; // Extract token from "Bearer <token>"
-  jwt.verify(token, SECRET_KEY, (err, decoded) => {
+  jwt.verify(token, ACCESS_SECRET_KEY, (err, decoded) => {
       if (err) {
           return res.status(401).json({ error: 'Invalid token' });
       }
@@ -261,7 +270,7 @@ app.get('/auth/verify', (req, res) => {
 
   const token = authHeader.split(' ')[1];
   try {
-    jwt.verify(token, SECRET_KEY); // Verify the token
+    jwt.verify(token, ACCESS_SECRET_KEY); // Verify the token
     console.log("valid auth");
     res.status(200).json({ message: 'Token is valid' });
   } catch (err) {
@@ -269,6 +278,66 @@ app.get('/auth/verify', (req, res) => {
     res.status(401).json({ error: 'Invalid token' });
   }
 });
+
+app.post('/auth/refresh', async (req, res) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+      return res.status(400).json({ error: 'Refresh token is required' });
+  }
+
+  try {
+      // Verify the refresh token
+      const decoded = jwt.verify(refreshToken, REFRESH_SECRET_KEY);
+
+      // Optional: Check if the refresh token exists in the database
+      const query = `SELECT * FROM users WHERE id = ? AND refresh_token = ?`;
+      const [users] = await db.query(query, [decoded.id, refreshToken]);
+
+      if (users.length === 0) {
+          return res.status(401).json({ error: 'Invalid refresh token' });
+      }
+
+      const user = users[0];
+
+      // Generate a new access token
+      const newAccessToken = jwt.sign(
+          { 
+            id: user.id,
+            email: user.email, 
+            username: user.username 
+          },
+          ACCESS_SECRET_KEY,
+          { expiresIn: '15m' }
+      );
+
+      res.status(200).json({
+          accessToken: newAccessToken,
+      });
+  } catch (err) {
+      console.error(err);
+      return res.status(401).json({ error: 'Invalid or expired refresh token' });
+  }
+});
+
+app.post('/auth/logout', async (req, res) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+      return res.status(400).json({ error: 'Refresh token is required' });
+  }
+
+  try {
+      // Remove the refresh token from the database
+      await db.query(`UPDATE users SET refresh_token = NULL WHERE refresh_token = ?`, [refreshToken]);
+
+      res.status(200).json({ message: 'Logged out successfully' });
+  } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 
 app.get('/api/protected', verifyToken, (req, res) => {
   res.status(200).json({ message: 'This is a protected route', user: req.user });

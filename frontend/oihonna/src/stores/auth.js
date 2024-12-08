@@ -13,7 +13,7 @@ export const getUserData = () => {
 }
 // Function to check if the user is authenticated
 export const checkAuth = async () => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('accessToken');
   if (token) {
     try {
       const res = await fetch('http://localhost:3000/auth/verify', {
@@ -27,7 +27,7 @@ export const checkAuth = async () => {
         setLoggedIn(true); // Set logged-in state to true
       } else {
         setLoggedIn(false); // Invalid token
-        localStorage.removeItem('token'); // Remove token if invalid
+        localStorage.removeItem('accessToken'); // Remove token if invalid
       }
     } catch (err) {
       console.error('Auth check failed:', err);
@@ -36,4 +36,54 @@ export const checkAuth = async () => {
   } else {
     setLoggedIn(false); // No token found
   }
+};
+
+export const refreshToken = async () => {
+  const storedRefreshToken = localStorage.getItem('refreshToken');
+
+  const response = await fetch('http://localhost:3000/auth/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: storedRefreshToken }),
+  });
+
+  const data = await response.json();
+
+  if (response.ok) {
+      localStorage.setItem('accessToken', data.accessToken);
+      return data.accessToken;
+  } else {
+      console.error('Failed to refresh token', data.error);
+      // Handle refresh failure (e.g., logout the user)
+  }
+};
+
+export const fetchWithAuth = async (url, options = {}) => {
+  let token = localStorage.getItem('accessToken');
+
+  const response = await fetch(url, {
+      ...options,
+      headers: {
+          ...options.headers,
+          Authorization: `Bearer ${token}`,
+      },
+  });
+
+  if (response.status === 401) {
+      // Access token expired, try to refresh it
+      token = await refreshToken();
+
+      if (token) {
+          // Retry the request with the new token
+          return fetch(url, {
+              ...options,
+              headers: {
+                  ...options.headers,
+                  Authorization: `Bearer ${token}`,
+              },
+          });
+      }
+  }
+
+  return response;
 };
