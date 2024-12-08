@@ -114,13 +114,12 @@ socket.on('newMessage', async (msg) => {
     <div class="messages" bind:this={messagesContainer}>
         {#each $messages as { username, message, timestamp, picture }}
             <div class="message">
-                <img
-                src={picture || 'https://via.placeholder.com/20'}
-                height="20"
-                width="20"
-                alt="User profile picture"
-                />
-                <span>{username}:</span> {message} <br />
+                <!-- svelte-ignore a11y_img_redundant_alt -->
+                <a class="profile-link" href="/profile/:{username}"><img class="pro-picture"
+                src={picture}
+                alt="□"
+                /></a>
+                <span><a class="profile-link" href="/profile/:{username}">{username}:</a></span> {message} <br />
                 <small>{new Date(timestamp).toLocaleString()}</small>
             </div>
         {/each}
@@ -148,6 +147,20 @@ socket.on('newMessage', async (msg) => {
         padding: 20px;
         background-color: #2a2a2a;
         border-radius: 10px;
+    }
+
+    .profile-link{
+        color: white;
+        text-decoration: none;
+    }
+
+    .pro-picture{
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        object-fit: cover;
+        margin-right: 6px;
+        border: 2px solid #eaeaea; /* Light border for the picture */
     }
 
     .messages {
