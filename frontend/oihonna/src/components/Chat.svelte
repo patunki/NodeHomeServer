@@ -34,17 +34,24 @@
     });
 
     // On mount, set up WebSocket listeners
-    socket.on('chatMessages', (data) => {
-        messages.set(data);
-    });
+    socket.on('chatMessages', async (data) => {
+    const messagesWithPictures = await Promise.all(
+        data.map(async (msg) => ({
+            ...msg,
+            picture: await fetchAndCachePicture(msg.username),
+        }))
+    );
+    messages.set(messagesWithPictures);
+});
 
-    socket.on('newMessage', (data) => {
-        messages.update((msgs) => {
-            const updated = [...msgs, data];
-            return updated.slice(-20); // Keep only 20 most recent messages
-        });
-        scrollToBottom(); // Scroll to the bottom when a new message arrives
+socket.on('newMessage', async (msg) => {
+    const picture = await fetchAndCachePicture(msg.username);
+    messages.update((msgs) => {
+        const updated = [...msgs, { ...msg, picture }];
+        return updated.slice(-20); // Keep only 20 most recent messages
     });
+    scrollToBottom(); // Scroll to bottom when new message arrives
+});
 
     const sendMessage = async () => {
         if (!message) return;
@@ -70,8 +77,9 @@
             return pictureCache.get(username);
         }
 
-        const picture = await getpicture(username);
+        const picture = await getPicture(username);
         pictureCache.set(username, picture);
+        console.log(picture);
         return picture;
     };
     //EI TOIMI
@@ -106,7 +114,12 @@
     <div class="messages" bind:this={messagesContainer}>
         {#each $messages as { username, message, timestamp, picture }}
             <div class="message">
-                <img src={picture} height="20" width="20" alt="□" />
+                <img
+                src={picture || 'https://via.placeholder.com/20'}
+                height="20"
+                width="20"
+                alt="User profile picture"
+                />
                 <span>{username}:</span> {message} <br />
                 <small>{new Date(timestamp).toLocaleString()}</small>
             </div>

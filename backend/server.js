@@ -175,7 +175,7 @@ io.on('connection', async (socket) => {
   socket.emit('chatMessages', chatMessages);
 
   // Handle receiving a new message
-  socket.on('sendMessage', (data) => {
+  socket.on('sendMessage', async (data) => {
     // Token should be passed with the message
     const token = data.accessToken; // You can send the token with the message data
     console.log(token);
@@ -194,12 +194,19 @@ io.on('connection', async (socket) => {
         socket.user = decoded; // You can attach the user information (e.g., username)
 
         // Emit the message with the user data (username)
+        
         io.emit('newMessage', {
             ...data,
             username: socket.user.username,
             timestamp: new Date().toISOString(),
         });
     });
+  try {
+    const query = `INSERT INTO chat_messages (username, message, timestamp) VALUES (?, ?, NOW())`;
+    await db.query(query, [data.username, data.message]);
+  } catch (err) {
+    console.error('Error retrieving messages:', err);
+  }
 });
 
 // Handle errors (in case of any other issues)
