@@ -1,7 +1,7 @@
 <script>
     import { writable } from "svelte/store";
     import { io } from "socket.io-client";
-    import { loggedIn, getUserData, fetchWithAuth, getToken } from "../stores/auth";
+    import { loggedIn, getUserData, fetchWithAuth, getToken, checkAuth } from "../stores/auth";
     import { onMount, afterUpdate } from "svelte";
 
     const socket = io('http://localhost:3050'); // Connect to the backend WebSocket server
@@ -12,9 +12,14 @@
     let messagesContainer;
 
     // Fetch user data (mocked or from your auth system)
-    const userData = getUserData(); 
-    username = userData.username;
-    const accessToken = getToken();
+    var userData;
+    var accessToken;
+
+    onMount(() => {
+        accessToken = getToken();
+        userData = getUserData();
+        username = userData.username; 
+    });
 
     afterUpdate(() => {
         scrollToBottom(); // Scrolls to the bottom after every update
@@ -41,9 +46,9 @@
         scrollToBottom(); // Scroll to the bottom when a new message arrives
     });
 
-    const sendMessage = () => {
+    const sendMessage = async () => {
         if (!message) return;
-
+        await checkAuth();
         const newMessage = {
             message,
             timestamp: new Date().toISOString(),

@@ -466,3 +466,15 @@ const handleLogout = async () => {
     }
   </style>
   
+
+
+
+
+
+
+
+    var user;
+
+    onMount( async () => {
+        user = await getUserData();
+    });
