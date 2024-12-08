@@ -19,7 +19,7 @@
                         <span>Chat</span>
                     </div>
                 </a>
-                <a href="/map" class="gallery-item">
+                <a href="https://www.marinetraffic.com/en/ais/home/centerx:25.3/centery:65.0/zoom:11" class="gallery-item">
                     <img src="../src/public/map.png" alt="Map" />
                     <div class="overlay">
                         <span>Map</span>
