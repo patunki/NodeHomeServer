@@ -2,15 +2,22 @@
     import { writable } from 'svelte/store';
     import 'iconify-icon';
     import { goto } from '$app/navigation';
+    import { setLoggedIn , loggedIn, checkAuth } from '../stores/auth';
+    import { onMount } from 'svelte';
 
     let dropdownOptions = ["Home", "Chat", "Gallery", "Contact"];
     let isDropdownOpen = writable(false);
 
     const goToLogin = () => goto('/login');
     const goToSignup = () => goto('/signup');
-    
-    // User's logged-in state (for demo, we'll assume loggedIn is true or false)
-    let loggedIn = writable(false);
+    const goToProfile = () => goto('/profile');
+
+    onMount(async () => {
+        await checkAuth();
+    });
+
+
+    // User's logged-in state (use your actual auth logic)
 
     const toggleDropdown = () => {
         isDropdownOpen.update(current => !current);
@@ -18,6 +25,13 @@
 
     const selectOption = (option) => {
         isDropdownOpen.set(false); // Close dropdown after selection
+    };
+
+    const logout = () => {
+        loggedIn.set(false); // Log the user out (you can add API calls here)
+        localStorage.removeItem('token'); // Clear tokens (example logic)
+        //localStorage.removeItem('refreshToken');
+        goto('/'); // Redirect to homepage or login page
     };
 
     // Toggle login state (for testing purposes)
@@ -44,11 +58,12 @@
             </div>
         {/if}
 
-        <!-- Conditional Rendering of Login/Signup or Profile Links -->
+        <!-- Conditional Rendering of Login/Signup or Profile/Logout Links -->
         <div class="header-buttons">
             {#if $loggedIn}
-                <!-- If the user is logged in, show the Profile link -->
-                <a href="/profile" class="buttons">Your Profile</a>
+                <!-- If the user is logged in, show Profile and Logout buttons -->
+                <button class="buttons" on:click={goToProfile}>Your Profile</button>
+                <button class="buttons" on:click={logout}>Logout</button>
             {:else}
                 <!-- If the user is not logged in, show Login and Sign Up buttons -->
                 <button class="buttons" on:click={goToLogin}>Login</button>

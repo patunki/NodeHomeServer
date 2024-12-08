@@ -1,6 +1,6 @@
 <script>
     import MainLayout from '../MainLayout.svelte'; // Use MainLayout
-    import { backendIp } from '../../stores'; // Optional: For global backend config
+    import { backendIp } from '../../stores/stores'; // Optional: For global backend config
     import { goto } from '$app/navigation';
   
     let email = '';

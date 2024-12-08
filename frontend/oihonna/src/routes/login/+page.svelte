@@ -1,11 +1,15 @@
 <script>
     import MainLayout from '../MainLayout.svelte'; // Use MainLayout
-    import { backendIp } from '../../stores'; // Optional: For global backend config
+    import { backendIp } from '../../stores/stores'; // Optional: For global backend config
     import { goto } from '$app/navigation';
-  
+    import { writable } from 'svelte/store';
+    import { setLoggedIn , loggedIn } from '../../stores/auth';
+
     let email = '';
     let password = '';
     let errorMessage = '';
+
+  
   
     const login = async () => {
       const res = await fetch(`http://localhost:3000/auth/login`, {
@@ -17,6 +21,8 @@
       if (res.ok) {
         const data = await res.json();
         console.log('Login successful', data);
+        localStorage.setItem('token', data.token);
+        setLoggedIn(true);
         // Redirect to a protected page (e.g., dashboard or home)
         goto('/home');
       } else {

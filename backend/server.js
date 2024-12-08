@@ -6,6 +6,8 @@ const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const jwt = require('jsonwebtoken');
+
 
 const app = express();
 const PORT = 3000;
@@ -15,6 +17,8 @@ app.use(bodyParser.json());
 app.use(cors());
 
 const galleryPath = path.join(__dirname, 'uploads');
+
+const SECRET_KEY=process.env.SECRET_KEY;
 
 // Simulated user database
 const users = [
@@ -172,9 +176,20 @@ app.post('/auth/login', async (req, res) => {
           return res.status(401).json({ error: 'Invalid credentials' });
       }
 
-      // Password is valid, proceed with authentication
+      // Generate JWT
+      const token = jwt.sign(
+          {
+              id: user.id,
+              username: user.username,
+              email: user.email,
+          },
+          SECRET_KEY,
+          { expiresIn: '1h' } // Token expires in 1 hour
+      );
+      console.log("login: ", token);
       res.status(200).json({
           message: 'Login successful',
+          token,
           user: {
               id: user.id,
               username: user.username,
@@ -189,6 +204,7 @@ app.post('/auth/login', async (req, res) => {
       res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 app.post('/auth/signup', async (req, res) => {
   const { username, password, email } = req.body;
@@ -216,6 +232,48 @@ app.post('/auth/signup', async (req, res) => {
       res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+const verifyToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+      return res.status(401).json({ error: 'No token provided' });
+  }
+
+  const token = authHeader.split(' ')[1]; // Extract token from "Bearer <token>"
+  jwt.verify(token, SECRET_KEY, (err, decoded) => {
+      if (err) {
+          return res.status(401).json({ error: 'Invalid token' });
+      }
+
+      req.user = decoded; // Attach decoded token to the request object
+      next();
+  });
+};
+
+app.get('/auth/verify', (req, res) => {
+  const authHeader = req.headers.authorization;
+  console.log("verifying");
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    console.log("unauthorized");
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const token = authHeader.split(' ')[1];
+  try {
+    jwt.verify(token, SECRET_KEY); // Verify the token
+    console.log("valid auth");
+    res.status(200).json({ message: 'Token is valid' });
+  } catch (err) {
+    console.log("invalid: ", authHeader);
+    res.status(401).json({ error: 'Invalid token' });
+  }
+});
+
+app.get('/api/protected', verifyToken, (req, res) => {
+  res.status(200).json({ message: 'This is a protected route', user: req.user });
+});
+
 
 // Start server
 app.listen(PORT, () => {
