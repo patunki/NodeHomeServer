@@ -10,7 +10,7 @@ export const getUserData = () => {
   const storedData = localStorage.getItem('user');
   const userData = JSON.parse(storedData);
   return userData;
-}
+};
 // Function to check if the user is authenticated
 export const checkAuth = async () => {
   const token = localStorage.getItem('accessToken');
@@ -23,7 +23,11 @@ export const checkAuth = async () => {
         },
       });
 
-      if (res.ok) {
+      if(res.status === 401){
+        await refreshToken();
+        checkAuth();
+      }
+      else if (res.ok) {
         setLoggedIn(true); // Set logged-in state to true
       } else {
         setLoggedIn(false); // Invalid token
@@ -38,8 +42,35 @@ export const checkAuth = async () => {
   }
 };
 
+export const handleLogout = async () => {
+
+  const refreshToken = localStorage.getItem('refreshToken');
+  try{
+      const res = await fetch(`http://localhost:3000/auth/logout`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken })
+      });
+  }catch(err){
+      console.log(err);
+  }
+  
+  localStorage.removeItem('accessToken'); // Clear tokens (example logic)
+  localStorage.removeItem('user');
+  localStorage.removeItem('refreshToken')
+  loggedIn.set(false); // Log the user out (you can add API calls here)
+
+  //localStorage.removeItem('refreshToken');
+  //goto('/'); // Redirect to homepage or login page
+};
+
 export const refreshToken = async () => {
   const storedRefreshToken = localStorage.getItem('refreshToken');
+
+  if (!storedRefreshToken){
+    setLoggedIn(false);
+    return;
+  }
 
   const response = await fetch('http://localhost:3000/auth/refresh', {
       method: 'POST',

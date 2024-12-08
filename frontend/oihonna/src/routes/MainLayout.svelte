@@ -2,7 +2,7 @@
     import { writable } from 'svelte/store';
     import 'iconify-icon';
     import { goto } from '$app/navigation';
-    import { setLoggedIn , loggedIn, checkAuth } from '../stores/auth';
+    import { setLoggedIn , loggedIn, checkAuth, handleLogout, refreshToken } from '../stores/auth';
     import { onMount } from 'svelte';
 
     let dropdownOptions = ["Home", "Chat", "Gallery", "Contact"];
@@ -27,13 +27,8 @@
         isDropdownOpen.set(false); // Close dropdown after selection
     };
 
-    const logout = () => {
-        loggedIn.set(false); // Log the user out (you can add API calls here)
-        localStorage.removeItem('accessToken'); // Clear tokens (example logic)
-        localStorage.removeItem('user');
-        localStorage.removeItem('refreshToken')
-        //localStorage.removeItem('refreshToken');
-        //goto('/'); // Redirect to homepage or login page
+    const logout = async () => {
+        handleLogout();
     };
 
     // Toggle login state (for testing purposes)

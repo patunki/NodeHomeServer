@@ -206,6 +206,9 @@ app.post('/auth/login', async (req, res) => {
               privileges: user.privileges,
               member: user.member,
               role: user.role,
+              picture: user.picture,
+              create_time: user.create_time,
+              bio: user.bio,
           },
       });
   } catch (err) {
@@ -262,7 +265,6 @@ const verifyToken = (req, res, next) => {
 
 app.get('/auth/verify', (req, res) => {
   const authHeader = req.headers.authorization;
-  console.log("verifying");
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     console.log("unauthorized");
     return res.status(401).json({ error: 'Unauthorized' });
@@ -271,7 +273,6 @@ app.get('/auth/verify', (req, res) => {
   const token = authHeader.split(' ')[1];
   try {
     jwt.verify(token, ACCESS_SECRET_KEY); // Verify the token
-    console.log("valid auth");
     res.status(200).json({ message: 'Token is valid' });
   } catch (err) {
     console.log("invalid: ", authHeader);
@@ -281,7 +282,7 @@ app.get('/auth/verify', (req, res) => {
 
 app.post('/auth/refresh', async (req, res) => {
   const { refreshToken } = req.body;
-
+  console.log("refreshing");
   if (!refreshToken) {
       return res.status(400).json({ error: 'Refresh token is required' });
   }
@@ -310,7 +311,6 @@ app.post('/auth/refresh', async (req, res) => {
           ACCESS_SECRET_KEY,
           { expiresIn: '15m' }
       );
-
       res.status(200).json({
           accessToken: newAccessToken,
       });
@@ -322,7 +322,7 @@ app.post('/auth/refresh', async (req, res) => {
 
 app.post('/auth/logout', async (req, res) => {
   const { refreshToken } = req.body;
-
+  console.log("trying to log out user");
   if (!refreshToken) {
       return res.status(400).json({ error: 'Refresh token is required' });
   }
@@ -330,7 +330,7 @@ app.post('/auth/logout', async (req, res) => {
   try {
       // Remove the refresh token from the database
       await db.query(`UPDATE users SET refresh_token = NULL WHERE refresh_token = ?`, [refreshToken]);
-
+      console.log("logged out user");
       res.status(200).json({ message: 'Logged out successfully' });
   } catch (err) {
       console.error(err);
