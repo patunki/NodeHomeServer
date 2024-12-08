@@ -96,40 +96,6 @@ app.post('/api/gallery/folder', (req, res) => {
 // Serve the uploaded images as static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Login route
-app.post("/login", (req, res) => {
-    const { username, password } = req.body;
-
-    const user = users.find(u => u.username === username && u.password === password);
-    if (user) {
-        res.json({ message: "Login successful!" });
-    } else {
-        res.status(401).json({ message: "Invalid username or password." });
-    }
-});
-
-app.post('/api/signup', async (req, res) => {
-  const { username, password, email} = req.body;
-  try {
-    const query = "SELECT * FROM users WHERE  username = $1 OR email = $2;"
-    const values = [username, email];
-    const result = await db.execute(query, values);
-    if (result.rows > 0){
-      return res.status(500).json({message: 'käyttäjä jo olemassa'});
-    }
-    const hashedPassword = await bcrypt.hash(password, 10);
-    
-
-
-    res.status(201).json({
-      message: 'User created successfully!',
-    });
-  } catch (err) {
-    console.error('Error inserting user:', err);
-    res.status(500).json({ message: 'Error creating user', error: err.message });
-  }
-});
-
 // API to send a chat message
 app.post('/api/chat', async (req, res) => {
   const { username, message } = req.body;
@@ -182,7 +148,77 @@ app.get('/api/users', async (req, res) => {
   }
 });
 
+app.post('/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+      return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  try {
+      // Fetch user from the database
+      const query = `SELECT * FROM users WHERE email = ?`;
+      const [users] = await db.query(query, [email]);
+
+      if (users.length === 0) {
+          return res.status(401).json({ error: 'Invalid credentials' });
+      }
+
+      const user = users[0];
+
+      // Compare hashed password
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+          return res.status(401).json({ error: 'Invalid credentials' });
+      }
+
+      // Password is valid, proceed with authentication
+      res.status(200).json({
+          message: 'Login successful',
+          user: {
+              id: user.id,
+              username: user.username,
+              email: user.email,
+              privileges: user.privileges,
+              member: user.member,
+              role: user.role,
+          },
+      });
+  } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/auth/signup', async (req, res) => {
+  const { username, password, email } = req.body;
+  console.log("trying to signup ", req.body);
+  if (!username || !password || !email) {
+    console.log("missing fields");
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  try {
+      // Hash the password with a salt
+      const saltRounds = 10;
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+      // Insert the user into the database
+      const query = `
+          INSERT INTO users (username, password, email, create_time) 
+          VALUES (?, ?, ?, NOW())
+      `;
+      await db.query(query, [username, hashedPassword, email]);
+
+      res.status(201).json({ message: 'User created successfully' });
+  } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
+

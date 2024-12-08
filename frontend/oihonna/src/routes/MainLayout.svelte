@@ -1,9 +1,13 @@
 <script>
     import { writable } from 'svelte/store';
     import 'iconify-icon';
+    import { goto } from '$app/navigation';
 
     let dropdownOptions = ["Home", "Chat", "Gallery", "Contact"];
     let isDropdownOpen = writable(false);
+
+    const goToLogin = () => goto('/login');
+    const goToSignup = () => goto('/signup');
     
     // User's logged-in state (for demo, we'll assume loggedIn is true or false)
     let loggedIn = writable(false);
@@ -47,8 +51,8 @@
                 <a href="/profile" class="buttons">Your Profile</a>
             {:else}
                 <!-- If the user is not logged in, show Login and Sign Up buttons -->
-                <button class="buttons">Login</button>
-                <button class="buttons">Sign up</button>
+                <button class="buttons" on:click={goToLogin}>Login</button>
+                <button class="buttons" on:click={goToSignup}>Sign up</button>
             {/if}
         </div>
     </header>
