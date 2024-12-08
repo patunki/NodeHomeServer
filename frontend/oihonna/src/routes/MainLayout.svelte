@@ -30,8 +30,9 @@
     const logout = () => {
         loggedIn.set(false); // Log the user out (you can add API calls here)
         localStorage.removeItem('token'); // Clear tokens (example logic)
+        localStorage.removeItem('user');
         //localStorage.removeItem('refreshToken');
-        goto('/'); // Redirect to homepage or login page
+        //goto('/'); // Redirect to homepage or login page
     };
 
     // Toggle login state (for testing purposes)

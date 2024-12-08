@@ -6,6 +6,11 @@ export const setLoggedIn = (value) => {
     loggedIn.set(value);
 };
 
+export const getUserData = () => {
+  const storedData = localStorage.getItem('user');
+  const userData = JSON.parse(storedData);
+  return userData;
+}
 // Function to check if the user is authenticated
 export const checkAuth = async () => {
   const token = localStorage.getItem('token');

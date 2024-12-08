@@ -274,7 +274,6 @@ app.get('/api/protected', verifyToken, (req, res) => {
   res.status(200).json({ message: 'This is a protected route', user: req.user });
 });
 
-
 // Start server
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);

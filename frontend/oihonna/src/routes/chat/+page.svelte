@@ -1,11 +1,16 @@
 <script>
   import MainLayout from '../MainLayout.svelte'; // Import the MainLayout component
+  import { goto } from '$app/navigation';
   import { onMount, afterUpdate } from 'svelte';
+  import { checkAuth, loggedIn, getUserData} from '../../stores/auth';
 
   let messages = [];
   let message = '';
-  let username = 'User1'; // Hardcoded username for now, can be dynamically set later
+  let username = ''; // Hardcoded username for now, can be dynamically set later
   let messagesContainer; // Reference to the messages div
+
+  const goToLogin = () => goto('/login');
+  const userData = getUserData();
 
   // Fetch existing messages on page load
   onMount(async () => {
@@ -18,12 +23,13 @@
   });
 
   const getMessages = async () => {
-      const res = await fetch('http://localhost:3000/api/chat');
-      if (res.ok) {
-          messages = await res.json();
-      } else {
-          console.error('Failed to fetch messages');
-      }
+    username = userData.username;
+    const res = await fetch('http://localhost:3000/api/chat');
+    if (res.ok) {
+        messages = await res.json();
+    } else {
+        console.error('Failed to fetch messages');
+    }
   };
 
   const sendMessage = async () => {
@@ -78,7 +84,11 @@
                   bind:value={message}
                   placeholder="Type your message here..."
               />
+              {#if $loggedIn}
               <button on:click={sendMessage}>Send</button>
+              {:else}
+              <button on:click={goToLogin}>Login</button>
+              {/if}
           </div>
       </div>
   </slot>
