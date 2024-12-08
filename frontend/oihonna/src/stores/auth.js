@@ -11,6 +11,12 @@ export const getUserData = () => {
   const userData = JSON.parse(storedData);
   return userData;
 };
+
+export const getToken = () => {
+  const storedData = localStorage.getItem('accessToken');
+  return storedData;
+};
+
 // Function to check if the user is authenticated
 export const checkAuth = async () => {
   const token = localStorage.getItem('accessToken');

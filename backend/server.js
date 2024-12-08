@@ -7,6 +7,8 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
+const http = require('http');
+const { Server } = require('socket.io');
 
 
 const app = express();
@@ -15,6 +17,16 @@ const PORT = 3000;
 // Middleware
 app.use(bodyParser.json());
 app.use(cors());
+
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "http://localhost:5173", // Update this to match your frontend's URL
+        methods: ["GET", "POST"]
+    }
+});
+
+
 
 const galleryPath = path.join(__dirname, 'uploads');
 
@@ -43,6 +55,24 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
+
+const verifyToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+      return res.status(401).json({ error: 'No token provided' });
+  }
+
+  const token = authHeader.split(' ')[1]; // Extract token from "Bearer <token>"
+  jwt.verify(token, ACCESS_SECRET_KEY, (err, decoded) => {
+      if (err) {
+          return res.status(401).json({ error: 'Invalid token' });
+      }
+
+      req.user = decoded; // Attach decoded token to the request object
+      next();
+  });
+};
 
 // Route to handle file uploads
 app.post('/api/gallery/upload', upload.single('image'), (req, res) => {
@@ -97,7 +127,7 @@ app.post('/api/gallery/folder', (req, res) => {
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // API to send a chat message
-app.post('/api/chat', async (req, res) => {
+app.post('/api/chat', verifyToken ,async (req, res) => {
   const { username, message } = req.body;
 
   if (!username || !message) {
@@ -131,20 +161,70 @@ app.get('/api/chat', async (req, res) => {
   }
 });
 
-//TEST
-app.get('/api/users', async (req, res) => {
-  const { username, password, email, privilages, member, role, picture, bio } = req.body;
+io.on('connection', async (socket) => {
+  console.log('A user connected');
 
   try {
-    const query = "SELECT * FROM users;"
-    const result = await db.execute(query);
-    console.log(result);
+    const [rows] = await db.execute('SELECT * FROM chat_messages ORDER BY timestamp ASC');
+    chatMessages = rows;
+  } catch (err) {
+    console.error('Error retrieving messages:', err);
+  }
+
+  // Send existing messages to the new client
+  socket.emit('chatMessages', chatMessages);
+
+  // Handle receiving a new message
+  socket.on('sendMessage', (data) => {
+    // Token should be passed with the message
+    const token = data.accessToken; // You can send the token with the message data
+    console.log(token);
+    if (!token) {
+        return socket.emit('error', 'Authentication error: No token provided');
+    }
+
+    // Verify the token only when sending a message
+    jwt.verify(token, ACCESS_SECRET_KEY, (err, decoded) => {
+        if (err) {
+          console.log("auth error");
+          return socket.emit('error', 'Authentication error: Invalid token');
+        }
+
+        // Attach user data to socket if authentication is successful
+        socket.user = decoded; // You can attach the user information (e.g., username)
+
+        // Emit the message with the user data (username)
+        io.emit('newMessage', {
+            ...data,
+            username: socket.user.username,
+            timestamp: new Date().toISOString(),
+        });
+    });
+});
+
+// Handle errors (in case of any other issues)
+socket.on('error', (error) => {
+    console.error(error);
+});
+
+  socket.on('disconnect', () => {
+      console.log('A user disconnected');
+  });
+});
+
+//TEST
+app.get('/api/user', async (req, res) => {
+  const { username } = req.headers;
+  try {
+    const query = `SELECT picture FROM users WHERE username = ?;`
+    const [result] = await db.query(query, [username]);
+    const user = result[0];   
     res.status(201).json({
-      message: 'User created successfully!',
+        picture: user.picture
     });
   } catch (err) {
     console.error('Error inserting user:', err);
-    res.status(500).json({ message: 'Error creating user', error: err.message });
+    res.status(500).json({ message: 'Error fetchng user', error: err.message });
   }
 });
 
@@ -245,23 +325,6 @@ app.post('/auth/signup', async (req, res) => {
   }
 });
 
-const verifyToken = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader) {
-      return res.status(401).json({ error: 'No token provided' });
-  }
-
-  const token = authHeader.split(' ')[1]; // Extract token from "Bearer <token>"
-  jwt.verify(token, ACCESS_SECRET_KEY, (err, decoded) => {
-      if (err) {
-          return res.status(401).json({ error: 'Invalid token' });
-      }
-
-      req.user = decoded; // Attach decoded token to the request object
-      next();
-  });
-};
 
 app.get('/auth/verify', (req, res) => {
   const authHeader = req.headers.authorization;
@@ -311,6 +374,7 @@ app.post('/auth/refresh', async (req, res) => {
           ACCESS_SECRET_KEY,
           { expiresIn: '15m' }
       );
+      console.log("refreshed");
       res.status(200).json({
           accessToken: newAccessToken,
       });
@@ -345,6 +409,9 @@ app.get('/api/protected', verifyToken, (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
 
+server.listen(3050, () => {
+  console.log('Socket running on http://localhost:3050');
+});
