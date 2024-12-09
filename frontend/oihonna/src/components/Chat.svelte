@@ -119,7 +119,7 @@ socket.on('newMessage', async (msg) => {
                 src={picture}
                 alt="□"
                 /></a>
-                <span><a class="profile-link" href="/profile/:{username}">{username}:</a></span> {message} <br />
+                <span><a class="profile-link" href="/profile/{username}">{username}:</a></span> {message} <br />
                 <small>{new Date(timestamp).toLocaleString()}</small>
             </div>
         {/each}

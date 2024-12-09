@@ -219,13 +219,20 @@ socket.on('error', (error) => {
 
 //TEST
 app.get('/api/user', async (req, res) => {
-  const { username } = req.headers;
+  const { username } = req.headers; 
+  console.log("getting: ", username);
   try {
-    const query = `SELECT picture FROM users WHERE username = ?;`
+    const query = `SELECT * FROM users WHERE username = ?;`
     const [result] = await db.query(query, [username]);
     const user = result[0];   
     res.status(201).json({
-        picture: user.picture
+        username: user.username,
+        picture: user.picture,
+        create_time: user.create_time,
+        privlages: user.privileges,
+        member: user.member,
+        role: user.role,
+        bio: user.bio
     });
   } catch (err) {
     console.error('Error inserting user:', err);
