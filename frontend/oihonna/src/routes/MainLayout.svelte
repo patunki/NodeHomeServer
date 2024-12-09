@@ -11,6 +11,7 @@
     const goToLogin = () => goto('/login');
     const goToSignup = () => goto('/signup');
     const goToProfile = () => goto('/profile');
+    const goToPortal = () => goto('/portal');
 
     onMount(async () => {
         await checkAuth();
@@ -59,6 +60,7 @@
         <div class="header-buttons">
             {#if $loggedIn}
                 <!-- If the user is logged in, show Profile and Logout buttons -->
+                <button class="buttons" on:click={goToPortal}>Crew portal</button>
                 <button class="buttons" on:click={goToProfile}>Your Profile</button>
                 <button class="buttons" on:click={logout}>Logout</button>
             {:else}

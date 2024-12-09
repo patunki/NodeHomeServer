@@ -35,16 +35,20 @@ export const checkAuth = async () => {
       }
       else if (res.ok) {
         setLoggedIn(true); // Set logged-in state to true
+        return true;
       } else {
         setLoggedIn(false); // Invalid token
         localStorage.removeItem('accessToken'); // Remove token if invalid
+        return false;
       }
     } catch (err) {
       console.error('Auth check failed:', err);
       setLoggedIn(false);
+      return false;
     }
   } else {
     setLoggedIn(false); // No token found
+    return false;
   }
 };
 
