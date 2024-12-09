@@ -220,7 +220,6 @@ socket.on('error', (error) => {
 //TEST
 app.get('/api/user', async (req, res) => {
   const { username } = req.headers; 
-  console.log("getting: ", username);
   try {
     const query = `SELECT * FROM users WHERE username = ?;`
     const [result] = await db.query(query, [username]);
