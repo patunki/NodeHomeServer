@@ -38,7 +38,7 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     // Get the folder from the request (make sure it's sanitized)
     const folder = req.body.folder || 'default'; // Default to 'default' if no folder is provided
-    const folderPath = path.join(uploadPath, folder);
+    const folderPath = path.join(galleryPath, folder);
 
     // Create the folder if it doesn't exist
     if (!fs.existsSync(folderPath)) {
@@ -162,7 +162,6 @@ app.get('/api/chat', async (req, res) => {
 });
 
 io.on('connection', async (socket) => {
-  console.log('A user connected');
 
   try {
     const [rows] = await db.execute('SELECT * FROM chat_messages ORDER BY timestamp ASC');
@@ -178,7 +177,6 @@ io.on('connection', async (socket) => {
   socket.on('sendMessage', async (data) => {
     // Token should be passed with the message
     const token = data.accessToken; // You can send the token with the message data
-    console.log(token);
     if (!token) {
         return socket.emit('error', 'Authentication error: No token provided');
     }
@@ -215,7 +213,7 @@ socket.on('error', (error) => {
 });
 
   socket.on('disconnect', () => {
-      console.log('A user disconnected');
+      
   });
 });
 
